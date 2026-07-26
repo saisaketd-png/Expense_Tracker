@@ -7,6 +7,7 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { AddExpenseModal } from '../components/ui/AddExpenseModal';
 import { SkeletonCard, SkeletonText, Skeleton } from '../components/ui/Skeleton';
 import { getCategoryStyles } from '../utils/categoryIcons';
+import { motion, AnimatePresence } from 'framer-motion';
 import './Transactions.css';
 
 type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest';
@@ -98,16 +99,22 @@ export const Transactions: React.FC = () => {
       </div>
 
       {sortedTransactions.length > 0 ? (
-        <div className="transactions-list">
-          {sortedTransactions.map(tx => {
-            const styles = getCategoryStyles(tx.category);
-            
-            return (
-              <div 
-                className="premium-transaction-card" 
-                key={tx.id}
-                style={{ '--tx-color': styles.color } as React.CSSProperties}
-              >
+        <motion.div layout className="transactions-list">
+          <AnimatePresence mode="popLayout">
+            {sortedTransactions.map(tx => {
+              const styles = getCategoryStyles(tx.category);
+              
+              return (
+                <motion.div 
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className="premium-transaction-card" 
+                  key={tx.id}
+                  style={{ '--tx-color': styles.color } as React.CSSProperties}
+                >
                 <div className="tx-card-content">
                   <div className="tx-main">
                     <div className="tx-icon-wrapper" style={{ backgroundColor: styles.bg, color: styles.color }}>
@@ -142,10 +149,11 @@ export const Transactions: React.FC = () => {
                   </div>
                 </div>
                 <div className="tx-animated-border"></div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+          </AnimatePresence>
+        </motion.div>
       ) : (
         <div className="empty-state premium-empty-state">
           <div className="empty-state-icon">

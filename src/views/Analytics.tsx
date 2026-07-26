@@ -6,6 +6,7 @@ import {
 import { useExpenses } from '../context/ExpenseContext';
 import { SkeletonCard, SkeletonText } from '../components/ui/Skeleton';
 import { getCategoryStyles } from '../utils/categoryIcons';
+import { motion } from 'framer-motion';
 import { 
   groupTransactionsByCategory, 
   groupTransactionsByMonth 
@@ -22,6 +23,19 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     );
   }
   return null;
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 200, damping: 20 } }
 };
 
 export const Analytics: React.FC = () => {
@@ -84,14 +98,20 @@ export const Analytics: React.FC = () => {
   }
 
   return (
-    <div className="analytics-page animate-fade-in">
-      <div className="analytics-header">
+    <motion.div 
+      className="analytics-page"
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-50px" }}
+      variants={containerVariants}
+    >
+      <motion.div className="analytics-header" variants={itemVariants}>
         <h1>Analytics</h1>
-      </div>
+      </motion.div>
 
       <div className="analytics-grid">
         {/* Category Breakdown Pie Chart */}
-        <div className="premium-analytics-card">
+        <motion.div className="premium-analytics-card" variants={itemVariants}>
           <div className="card-header-simple">
             <h3>Category Breakdown</h3>
             <p className="subtitle">Where your money goes</p>
@@ -127,10 +147,17 @@ export const Analytics: React.FC = () => {
               </ResponsiveContainer>
               
               <div className="custom-legend">
-                {categoryData.map((entry) => {
+                {categoryData.map((entry, i) => {
                   const styles = getCategoryStyles(entry.name);
                   return (
-                    <div className="legend-item" key={entry.name}>
+                    <motion.div 
+                      className="legend-item" 
+                      key={entry.name}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      viewport={{ once: true }}
+                    >
                       <div className="legend-icon-wrapper" style={{ backgroundColor: styles.bg, color: styles.color }}>
                         {styles.icon}
                       </div>
@@ -138,7 +165,7 @@ export const Analytics: React.FC = () => {
                         <span className="legend-name">{entry.name}</span>
                         <span className="legend-amount">₹{entry.value.toLocaleString('en-IN')}</span>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -148,10 +175,10 @@ export const Analytics: React.FC = () => {
               <p>No data to display.</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Monthly Trend Area Chart */}
-        <div className="premium-analytics-card">
+        <motion.div className="premium-analytics-card" variants={itemVariants}>
           <div className="card-header-simple">
             <h3>Monthly Trend</h3>
             <p className="subtitle">Your spending over time</p>
@@ -204,8 +231,8 @@ export const Analytics: React.FC = () => {
               <p>No data to display.</p>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };

@@ -20,11 +20,7 @@
   align-items: start;
 }
 
-@media (min-width: 1024px) {
-  .analytics-grid {
-    grid-template-columns: 1fr 1.5fr;
-  }
-}
+
 
 .premium-analytics-card {
   background: var(--color-card);
@@ -117,14 +113,20 @@
 /* Custom Legend for Pie Chart */
 .custom-legend {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 12px;
   margin-top: var(--spacing-md);
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 768px) {
   .custom-legend {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .custom-legend {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

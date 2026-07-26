@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Plus, ArrowUpRight, ArrowDownRight, Target, Wallet, Receipt, IndianRupee } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useExpenses } from '../context/ExpenseContext';
 import { SkeletonCard, SkeletonText, Skeleton } from '../components/ui/Skeleton';
 import { AmountModal } from '../components/ui/AmountModal';
@@ -32,6 +33,19 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
   const savings = monthlyIncome > 0 ? monthlyIncome - totalExpenses : 0;
   const savingsRate = monthlyIncome > 0 ? Math.round((savings / monthlyIncome) * 100) : 0;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+  };
+
   if (isInitializing) {
     return (
       <div className="dashboard animate-fade-in">
@@ -50,9 +64,9 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
   }
 
   return (
-    <div className="dashboard animate-fade-in">
+    <motion.div className="dashboard animate-fade-in" initial="hidden" animate="show" variants={containerVariants}>
       {/* 1. Greeting Section */}
-      <header className="header">
+      <motion.header className="header" variants={itemVariants}>
         <div className="greeting-section">
           <h1>{greeting}!</h1>
           <p className="date-subtitle">{currentDate}</p>
@@ -69,10 +83,10 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
             <img src="https://ui-avatars.com/api/?name=User&background=5B4CF0&color=fff&rounded=true&bold=true" alt="Profile" />
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* 2. Financial Hero Section */}
-      <section className="hero-section">
+      <motion.section className="hero-section" variants={itemVariants}>
         <div className="hero-card">
           <div className="hero-bg-glow"></div>
           <div className="hero-content">
@@ -124,10 +138,10 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* 3. Quick Actions */}
-      <section className="quick-actions">
+      <motion.section className="quick-actions" variants={itemVariants}>
         <button className="quick-action-btn primary" onClick={() => onOpenAddModal && onOpenAddModal()}>
           <div className="qa-icon"><Plus size={20} /></div>
           <span>Add Expense</span>
@@ -140,12 +154,12 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
           <div className="qa-icon"><Target size={20} /></div>
           <span>Update Budget</span>
         </button>
-      </section>
+      </motion.section>
 
       {/* 4. Financial Summary Cards */}
-      <section className="summary-section">
+      <motion.section className="summary-section" variants={itemVariants}>
         <div className="summary-grid">
-          <div className="premium-card" onClick={() => setIsBudgetModalOpen(true)}>
+          <motion.div className="premium-card" onClick={() => setIsBudgetModalOpen(true)} variants={itemVariants} whileHover={{ y: -4 }}>
             <div className="card-header">
               <div className="icon-wrapper primary"><Target size={24} /></div>
               <span className="trend-indicator"><ArrowUpRight size={14} /> Set limits</span>
@@ -154,9 +168,9 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
               <h3 className="card-amount"><AnimatedNumber value={monthlyBudget} prefix="₹" /></h3>
               <p className="card-label">Monthly Budget</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="premium-card" onClick={() => setIsIncomeModalOpen(true)}>
+          <motion.div className="premium-card" onClick={() => setIsIncomeModalOpen(true)} variants={itemVariants} whileHover={{ y: -4 }}>
             <div className="card-header">
               <div className="icon-wrapper accent"><Wallet size={24} /></div>
               <span className="trend-indicator positive"><ArrowDownRight size={14} /> +Income</span>
@@ -165,9 +179,9 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
               <h3 className="card-amount"><AnimatedNumber value={monthlyIncome} prefix="₹" /></h3>
               <p className="card-label">Monthly Income</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="premium-card">
+          <motion.div className="premium-card" variants={itemVariants} whileHover={{ y: -4 }}>
             <div className="card-header">
               <div className="icon-wrapper secondary"><Receipt size={24} /></div>
               <span className="trend-indicator negative"><ArrowUpRight size={14} /> {Math.round(budgetUsedPercent)}% used</span>
@@ -176,9 +190,9 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
               <h3 className="card-amount"><AnimatedNumber value={totalExpenses} prefix="₹" /></h3>
               <p className="card-label">Total Expenses</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="premium-card">
+          <motion.div className="premium-card" variants={itemVariants} whileHover={{ y: -4 }}>
             <div className="card-header">
               <div className="icon-wrapper success"><IndianRupee size={24} /></div>
               <span className="trend-indicator positive"><ArrowDownRight size={14} /> {savingsRate}% saved</span>
@@ -187,18 +201,18 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
               <h3 className="card-amount"><AnimatedNumber value={savings} prefix="₹" /></h3>
               <p className="card-label">Total Savings</p>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Placeholders for Analytics & Transactions that will be populated via routing or embedded later */}
-      <section className="analytics-preview">
+      <motion.section className="analytics-preview" variants={itemVariants}>
          <Analytics />
-      </section>
+      </motion.section>
       
-      <section className="transactions-preview">
+      <motion.section className="transactions-preview" variants={itemVariants}>
          <Transactions />
-      </section>
+      </motion.section>
 
       {isBudgetModalOpen && (
         <AmountModal
@@ -219,6 +233,6 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
           onClose={() => setIsIncomeModalOpen(false)}
         />
       )}
-    </div>
+    </motion.div>
   );
 };
