@@ -1,0 +1,15 @@
+{
+  "short_name": "Vault",
+  "name": "Vault - Luxury Expense Tracker",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#fdfeff",
+  "background_color": "#fdfeff"
+}
