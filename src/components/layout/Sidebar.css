@@ -1,0 +1,127 @@
+.sidebar {
+  display: none;
+  flex-direction: column;
+  background-color: var(--color-card);
+  border-right: 1px solid var(--color-border);
+  height: 100vh;
+  padding: var(--spacing-lg) var(--spacing-sm);
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    display: flex;
+    width: 80px; /* Compact on tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  .sidebar {
+    width: 250px; /* Full width on desktop */
+    padding: var(--spacing-lg);
+  }
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 1024px) {
+  .sidebar-logo {
+    justify-content: flex-start;
+  }
+}
+
+.logo-text {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .logo-text {
+    display: block;
+  }
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-item {
+    justify-content: flex-start;
+    padding: var(--spacing-md);
+  }
+}
+
+.sidebar-item:hover {
+  background-color: var(--color-background);
+  color: var(--color-text-main);
+}
+
+.sidebar-item.active {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.sidebar-item-label {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-item-label {
+    display: block;
+  }
+}
+
+.sidebar-add-btn {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  background-color: var(--color-primary);
+  color: white;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-add-btn:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.sidebar-add-label {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-add-label {
+    display: block;
+  }
+}
