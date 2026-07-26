@@ -11,7 +11,7 @@ import { Analytics } from './Analytics';
 import './Dashboard.css';
 
 export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAddModal }) => {
-  const { transactions, monthlyBudget, monthlyIncome, isInitializing, updateMonthlyBudget, updateMonthlyIncome } = useExpenses();
+  const { transactions, monthlyBudget, monthlyIncome, isInitializing, updateMonthlyBudget, updateMonthlyIncome, budgetStartDate, budgetEndDate, updateBudgetRange } = useExpenses();
   
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
@@ -32,6 +32,32 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
   const budgetUsedPercent = calculateBudgetUsedPercentage(totalExpenses, monthlyBudget);
   const savings = monthlyIncome > 0 ? monthlyIncome - totalExpenses : 0;
   const savingsRate = monthlyIncome > 0 ? Math.round((savings / monthlyIncome) * 100) : 0;
+
+  // Safe Daily Spending Limit Calculations (Custom Date Range)
+  const cycleStart = new Date(budgetStartDate);
+  const cycleEnd = new Date(budgetEndDate);
+  const todayDate = new Date();
+  
+  // Reset today to midnight for accurate day difference calculation
+  todayDate.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(cycleEnd);
+  endOfDay.setHours(23, 59, 59, 999);
+  
+  // Calculate remaining days (inclusive of today)
+  const timeDiff = endOfDay.getTime() - todayDate.getTime();
+  const daysRemaining = Math.max(1, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
+  
+  const cycleExpenses = transactions
+    .filter(tx => tx.type === 'expense')
+    .filter(tx => {
+      const txDate = new Date(tx.date);
+      txDate.setHours(0, 0, 0, 0);
+      return txDate >= cycleStart && txDate <= endOfDay;
+    })
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const cycleRemainingBudget = monthlyBudget - cycleExpenses;
+  const safeDailyLimit = cycleRemainingBudget > 0 ? cycleRemainingBudget / daysRemaining : 0;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -205,6 +231,31 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
         </div>
       </motion.section>
 
+      {/* 5. Safe Daily Spending Widget */}
+      <motion.section className="summary-section" variants={itemVariants}>
+        <div className="premium-card safe-daily-card" style={{ background: 'var(--color-primary)', color: 'white' }}>
+          <div className="card-header" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '16px', marginBottom: '16px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '4px' }}>Safe to Spend Today</h3>
+              <p style={{ opacity: 0.8, fontSize: '0.85rem' }}>{daysRemaining} days left in budget cycle</p>
+            </div>
+            <div className="icon-wrapper" style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+              <Target size={24} />
+            </div>
+          </div>
+          <div className="card-body">
+            <h3 className="card-amount" style={{ color: 'white', fontSize: '2.5rem' }}>
+              <AnimatedNumber value={Math.round(safeDailyLimit)} prefix="₹" />
+            </h3>
+            <p style={{ opacity: 0.8, marginTop: '8px', fontSize: '0.9rem' }}>
+              {cycleRemainingBudget <= 0 
+                ? "You have exhausted your budget for this cycle." 
+                : `You can spend ₹${Math.round(safeDailyLimit).toLocaleString('en-IN')} every day until ${cycleEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} to stay on budget.`}
+            </p>
+          </div>
+        </div>
+      </motion.section>
+
       {/* Placeholders for Analytics & Transactions that will be populated via routing or embedded later */}
       <motion.section className="analytics-preview" variants={itemVariants}>
          <Analytics />
@@ -220,6 +271,9 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
           title="Set Monthly Budget"
           initialAmount={monthlyBudget}
           onSave={updateMonthlyBudget}
+          startDate={budgetStartDate}
+          endDate={budgetEndDate}
+          onSaveRange={updateBudgetRange}
           onClose={() => setIsBudgetModalOpen(false)}
         />
       )}

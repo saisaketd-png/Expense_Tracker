@@ -17,9 +17,11 @@ export interface ExpenseContextType {
   isInitializing: boolean;
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   editTransaction: (id: string, tx: Partial<Transaction>) => void;
-  deleteTransaction: (id: string) => void;
   updateMonthlyBudget: (amount: number) => void;
   updateMonthlyIncome: (amount: number) => void;
+  budgetStartDate: string;
+  budgetEndDate: string;
+  updateBudgetRange: (start: string, end: string) => void;
 }
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
@@ -43,6 +45,26 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
     return 0; // Default empty state
   });
 
+  const [budgetStartDate, setBudgetStartDate] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('expense_tracker_v2_budget_start');
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {}
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    return firstDay.toISOString().split('T')[0];
+  });
+
+  const [budgetEndDate, setBudgetEndDate] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('expense_tracker_v2_budget_end');
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {}
+    const today = new Date();
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    return lastDay.toISOString().split('T')[0];
+  });
+
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     try {
       const savedExpenses = localStorage.getItem('expense_tracker_v2_data');
@@ -61,10 +83,12 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
       localStorage.setItem('expense_tracker_v2_data', JSON.stringify(transactions));
       localStorage.setItem('expense_tracker_v2_budget', JSON.stringify(monthlyBudget));
       localStorage.setItem('expense_tracker_v2_income', JSON.stringify(monthlyIncome));
+      localStorage.setItem('expense_tracker_v2_budget_start', JSON.stringify(budgetStartDate));
+      localStorage.setItem('expense_tracker_v2_budget_end', JSON.stringify(budgetEndDate));
     } catch (error) {
       console.error('Error saving to local storage', error);
     }
-  }, [transactions, monthlyBudget, monthlyIncome]);
+  }, [transactions, monthlyBudget, monthlyIncome, budgetStartDate, budgetEndDate]);
 
   // Simulate network delay for skeletons
   React.useEffect(() => {
@@ -95,6 +119,11 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
     setMonthlyIncome(amount);
   };
 
+  const updateBudgetRange = (start: string, end: string) => {
+    setBudgetStartDate(start);
+    setBudgetEndDate(end);
+  };
+
   return (
     <ExpenseContext.Provider value={{ 
       transactions, 
@@ -105,7 +134,10 @@ export const ExpenseProvider: React.FC<{ children: ReactNode }> = ({ children })
       editTransaction, 
       deleteTransaction,
       updateMonthlyBudget,
-      updateMonthlyIncome
+      updateMonthlyIncome,
+      budgetStartDate,
+      budgetEndDate,
+      updateBudgetRange
     }}>
       {children}
     </ExpenseContext.Provider>

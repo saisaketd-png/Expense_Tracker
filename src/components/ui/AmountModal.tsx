@@ -11,19 +11,26 @@ interface AmountModalProps {
   title: string;
   initialAmount: number;
   onSave: (amount: number) => void;
+  startDate?: string;
+  endDate?: string;
+  onSaveRange?: (start: string, end: string) => void;
 }
 
-export const AmountModal: React.FC<AmountModalProps> = ({ isOpen, onClose, title, initialAmount, onSave }) => {
+export const AmountModal: React.FC<AmountModalProps> = ({ isOpen, onClose, title, initialAmount, onSave, startDate, endDate, onSaveRange }) => {
   const [amount, setAmount] = useState('');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
   const [error, setError] = useState('');
   const { showToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
       setAmount(initialAmount > 0 ? initialAmount.toString() : '');
+      if (startDate) setStart(startDate);
+      if (endDate) setEnd(endDate);
       setError('');
     }
-  }, [isOpen, initialAmount]);
+  }, [isOpen, initialAmount, startDate, endDate]);
 
   if (!isOpen) return null;
 
@@ -42,7 +49,17 @@ export const AmountModal: React.FC<AmountModalProps> = ({ isOpen, onClose, title
       return;
     }
 
+    if (onSaveRange) {
+      if (new Date(end) < new Date(start)) {
+        setError('End date cannot be before start date.');
+        return;
+      }
+    }
+
     onSave(amountNum);
+    if (onSaveRange) {
+      onSaveRange(start, end);
+    }
     showToast(`${title} updated successfully!`, 'success');
     onClose();
   };
@@ -64,8 +81,53 @@ export const AmountModal: React.FC<AmountModalProps> = ({ isOpen, onClose, title
             value={amount} 
             onChange={(e) => setAmount(e.target.value)} 
             error={error}
+            required
             autoFocus
           />
+          {onSaveRange && (
+            <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+                  Start Date
+                </label>
+                <input 
+                  type="date"
+                  value={start}
+                  onChange={(e) => setStart(e.target.value)}
+                  style={{
+                    background: 'var(--color-background)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px',
+                    color: 'var(--color-text-main)',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+                  End Date
+                </label>
+                <input 
+                  type="date"
+                  value={end}
+                  onChange={(e) => setEnd(e.target.value)}
+                  style={{
+                    background: 'var(--color-background)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px',
+                    color: 'var(--color-text-main)',
+                    fontFamily: 'inherit',
+                    outline: 'none',
+                    width: '100%'
+                  }}
+                />
+              </div>
+            </div>
+          )}
           <Button type="submit" variant="primary" style={{ marginTop: 'var(--spacing-sm)' }}>
             Save
           </Button>
