@@ -17,6 +17,7 @@ export interface ExpenseContextType {
   isInitializing: boolean;
   addTransaction: (tx: Omit<Transaction, 'id'>) => void;
   editTransaction: (id: string, tx: Partial<Transaction>) => void;
+  deleteTransaction: (id: string) => void;
   updateMonthlyBudget: (amount: number) => void;
   updateMonthlyIncome: (amount: number) => void;
   budgetStartDate: string;

@@ -8,6 +8,7 @@ import { AddExpenseModal } from '../components/ui/AddExpenseModal';
 import { SkeletonCard, SkeletonText, Skeleton } from '../components/ui/Skeleton';
 import { getCategoryStyles } from '../utils/categoryIcons';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import './Transactions.css';
 
 type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest';
@@ -23,6 +24,11 @@ export const Transactions: React.FC = () => {
   const [deletingTxId, setDeletingTxId] = useState<string | null>(null);
 
   const expensesOnly = transactions.filter(tx => tx.type === 'expense');
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    show: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 25 } }
+  };
 
   const sortedTransactions = useMemo(() => {
     return [...expensesOnly].sort((a, b) => {
@@ -107,10 +113,10 @@ export const Transactions: React.FC = () => {
               return (
                 <motion.div 
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial="hidden"
+                  animate="show"
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  variants={itemVariants}
                   className="premium-transaction-card" 
                   key={tx.id}
                   style={{ '--tx-color': styles.color } as React.CSSProperties}

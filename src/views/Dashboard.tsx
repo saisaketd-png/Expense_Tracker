@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Plus, ArrowUpRight, ArrowDownRight, Target, Wallet, Receipt, IndianRupee } from 'lucide-react';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { useExpenses } from '../context/ExpenseContext';
 import { SkeletonCard, SkeletonText, Skeleton } from '../components/ui/Skeleton';
 import { AmountModal } from '../components/ui/AmountModal';
@@ -59,7 +60,7 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
   const cycleRemainingBudget = monthlyBudget - cycleExpenses;
   const safeDailyLimit = cycleRemainingBudget > 0 ? cycleRemainingBudget / daysRemaining : 0;
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -67,7 +68,7 @@ export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAdd
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
   };
