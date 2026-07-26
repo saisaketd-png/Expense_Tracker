@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import './App.css';
-import { BottomNav } from './components/layout/BottomNav';
 import { Sidebar } from './components/layout/Sidebar';
 import { Dashboard } from './views/Dashboard';
 import { Transactions } from './views/Transactions';
@@ -46,11 +45,10 @@ function App() {
     <ToastProvider>
       <ExpenseProvider>
         <div className="app-layout">
-          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} onOpenAddModal={() => setIsAddModalOpen(true)} />
+          <Sidebar currentView={activeTab} onNavigate={handleTabChange} />
           <div className="view-container animate-fade-in" key={activeTab}>
             {renderView()}
           </div>
-          <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
         </div>
         <AddExpenseModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
       </ExpenseProvider>

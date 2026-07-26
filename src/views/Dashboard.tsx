@@ -1,226 +1,224 @@
-import React, { useState } from 'react';
-import { Bell, Plus, IndianRupee, PieChart as PieChartIcon, Target, Receipt, Wallet } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import React, { useState, useEffect } from 'react';
+import { Bell, Plus, ArrowUpRight, ArrowDownRight, Target, Wallet, Receipt, IndianRupee } from 'lucide-react';
 import { useExpenses } from '../context/ExpenseContext';
-import { Button } from '../components/ui/Button';
 import { SkeletonCard, SkeletonText, Skeleton } from '../components/ui/Skeleton';
 import { AmountModal } from '../components/ui/AmountModal';
-import { calculateTotal, calculateRemainingBudget, calculateBudgetUsedPercentage, groupTransactionsByCategory } from '../utils/finance';
+import { AnimatedNumber } from '../components/ui/AnimatedNumber';
+import { calculateTotal, calculateRemainingBudget, calculateBudgetUsedPercentage } from '../utils/finance';
+import { Transactions } from './Transactions';
+import { Analytics } from './Analytics';
 import './Dashboard.css';
-
-const COLORS = ['#2563EB', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#14B8A6', '#EC4899', '#64748B'];
 
 export const Dashboard: React.FC<{ onOpenAddModal?: () => void }> = ({ onOpenAddModal }) => {
   const { transactions, monthlyBudget, monthlyIncome, isInitializing, updateMonthlyBudget, updateMonthlyIncome } = useExpenses();
   
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
+  const [greeting, setGreeting] = useState('Good Morning');
 
-  // Dynamic Calculations using finance utils
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good Morning');
+    else if (hour < 18) setGreeting('Good Afternoon');
+    else setGreeting('Good Evening');
+  }, []);
+
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  // Calculations
   const totalExpenses = calculateTotal(transactions, 'expense');
   const remainingBudget = calculateRemainingBudget(monthlyBudget, totalExpenses);
   const budgetUsedPercent = calculateBudgetUsedPercentage(totalExpenses, monthlyBudget);
-  
-  const categoryData = groupTransactionsByCategory(transactions, 'expense');
-  const recentTransactions = transactions.slice(0, 5);
-
-  const handleQuickAdd = () => {
-    if (onOpenAddModal) {
-      onOpenAddModal();
-    }
-  };
-
-  const renderCustomizedLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
-    const RADIAN = Math.PI / 180;
-    // Calculate label position to be outside the pie
-    const radius = outerRadius * 1.2;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  
-    return (
-      <text x={x} y={y} fill="var(--color-text-main)" fontSize="12" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-        {`${name} ${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
+  const savings = monthlyIncome > 0 ? monthlyIncome - totalExpenses : 0;
+  const savingsRate = monthlyIncome > 0 ? Math.round((savings / monthlyIncome) * 100) : 0;
 
   if (isInitializing) {
     return (
-      <div className="dashboard">
+      <div className="dashboard animate-fade-in">
         <header className="header">
           <div>
             <SkeletonText lines={1} style={{ width: '150px', height: '28px', marginBottom: '8px' }} />
             <SkeletonText lines={1} style={{ width: '250px', height: '16px' }} />
           </div>
-          <Skeleton style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+          <Skeleton style={{ width: '48px', height: '48px', borderRadius: '50%' }} />
         </header>
-        <div className="summary-grid">
-          <SkeletonCard className="summary-card-primary" />
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
-        <div className="dashboard-content">
-          <div className="recent-transactions">
-            <SkeletonText lines={1} style={{ width: '150px', height: '24px', marginBottom: '16px' }} />
-            <div className="transaction-list">
-              {[1, 2, 3, 4].map(i => (
-                <SkeletonCard key={i} style={{ height: '70px', marginBottom: '12px' }} />
-              ))}
-            </div>
-          </div>
+        <div className="hero-section">
+          <SkeletonCard style={{ height: '300px' }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="dashboard">
+    <div className="dashboard animate-fade-in">
+      {/* 1. Greeting Section */}
       <header className="header">
-        <div className="greeting">
-          <h1>Dashboard</h1>
-          <p>Here's your financial overview</p>
+        <div className="greeting-section">
+          <h1>{greeting}!</h1>
+          <p className="date-subtitle">{currentDate}</p>
         </div>
-        <button className="btn-icon" style={{ backgroundColor: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <Bell size={20} color="var(--color-text-main)" />
-        </button>
+        <div className="header-actions">
+          <button className="premium-icon-btn" onClick={() => onOpenAddModal && onOpenAddModal()} title="Add Expense">
+            <Plus size={20} />
+          </button>
+          <button className="premium-icon-btn">
+            <Bell size={20} />
+            <span className="notification-dot"></span>
+          </button>
+          <div className="profile-avatar">
+            <img src="https://ui-avatars.com/api/?name=User&background=5B4CF0&color=fff&rounded=true&bold=true" alt="Profile" />
+          </div>
+        </div>
       </header>
 
-      {/* Summary Cards */}
-      <div className="summary-grid">
-        <div className="summary-card summary-card-primary" style={{ cursor: 'pointer' }} onClick={() => setIsBudgetModalOpen(true)}>
-          <div className="summary-icon">
-            <Target size={24} color="var(--color-primary)" />
-          </div>
-          <div>
-            <p className="summary-label">Monthly Budget (Tap to set)</p>
-            <h3 className="summary-amount">₹{monthlyBudget.toLocaleString('en-IN')}</h3>
-            {monthlyBudget === 0 && <p style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: '4px' }}>Set a budget to track spending</p>}
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-icon" style={{ background: 'var(--color-success-light)', color: 'var(--color-success)' }}>
-            <IndianRupee size={24} />
-          </div>
-          <div>
-            <p className="summary-label">Total Expenses</p>
-            <h3 className="summary-amount">₹{totalExpenses.toLocaleString('en-IN')}</h3>
-          </div>
-        </div>
-
-        <div className="summary-card">
-          <div className="summary-icon" style={{ background: 'var(--color-warning-light)', color: 'var(--color-warning)' }}>
-            <Wallet size={24} />
-          </div>
-          <div>
-            <p className="summary-label">Remaining Budget</p>
-            <h3 className="summary-amount">₹{remainingBudget.toLocaleString('en-IN')}</h3>
-            <div className="progress-bar-container">
-              <div className="progress-bar" style={{ width: `${budgetUsedPercent}%`, backgroundColor: budgetUsedPercent > 90 ? 'var(--color-danger)' : 'white' }}></div>
+      {/* 2. Financial Hero Section */}
+      <section className="hero-section">
+        <div className="hero-card">
+          <div className="hero-bg-glow"></div>
+          <div className="hero-content">
+            <div className="hero-main-balance">
+              <p className="hero-label">Total Balance</p>
+              <h2 className="hero-amount">
+                <AnimatedNumber value={remainingBudget} prefix="₹" />
+              </h2>
             </div>
-          </div>
-        </div>
-
-        <div className="summary-card" style={{ cursor: 'pointer' }} onClick={() => setIsIncomeModalOpen(true)}>
-          <div className="summary-icon" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
-            <IndianRupee size={24} />
-          </div>
-          <div>
-            <p className="summary-label">Monthly Income (Tap to set)</p>
-            <h3 className="summary-amount">₹{monthlyIncome.toLocaleString('en-IN')}</h3>
-            {monthlyIncome === 0 && <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '4px' }}>Set your income to track savings</p>}
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-content">
-        <div className="recent-transactions">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-md)' }}>
-            <h2>Recent Transactions</h2>
-            <Button variant="secondary" onClick={handleQuickAdd}>
-              <Plus size={16} /> Quick Add
-            </Button>
-          </div>
-          
-          {recentTransactions.length > 0 ? (
-            <div className="transaction-list">
-              {recentTransactions.map((tx) => (
-                <div key={tx.id} className="transaction-item">
-                  <div className="tx-left">
-                    <div className="tx-icon">
-                      <IndianRupee size={20} />
-                    </div>
-                    <div>
-                      <h4>{tx.title}</h4>
-                      <p>{tx.category} • {tx.date}</p>
-                    </div>
-                  </div>
-                  <div className={`tx-amount ${tx.type === 'expense' ? 'amount-negative' : 'amount-positive'}`}>
-                    {tx.type === 'expense' ? '-' : '+'}₹{tx.amount.toLocaleString('en-IN')}
-                  </div>
+            
+            <div className="hero-progress">
+              <div className="progress-ring-container">
+                <svg className="progress-ring" width="120" height="120">
+                  <circle className="progress-ring-bg" stroke="rgba(255,255,255,0.1)" strokeWidth="8" fill="transparent" r="52" cx="60" cy="60"/>
+                  <circle className="progress-ring-fill" stroke="url(#progressGradient)" strokeWidth="8" fill="transparent" r="52" cx="60" cy="60" 
+                    style={{ strokeDasharray: `${2 * Math.PI * 52}`, strokeDashoffset: `${2 * Math.PI * 52 * (1 - budgetUsedPercent / 100)}` }}
+                  />
+                  <defs>
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#38BDF8" />
+                      <stop offset="100%" stopColor="#8B5CF6" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="progress-text">
+                  <span className="progress-percent">{Math.round(budgetUsedPercent)}%</span>
+                  <span className="progress-label">Spent</span>
                 </div>
-              ))}
+              </div>
             </div>
-          ) : (
-            <div className="empty-state-small">
-              <Receipt size={32} color="var(--color-text-muted)" />
-              <p>No expenses yet.</p>
-              <Button variant="secondary" onClick={handleQuickAdd} style={{ marginTop: 'var(--spacing-sm)' }}>Add your first expense</Button>
+          </div>
+
+          <div className="hero-stats">
+            <div className="hero-stat-item">
+              <p className="stat-label">Income</p>
+              <p className="stat-value">₹{monthlyIncome.toLocaleString('en-IN')}</p>
             </div>
-          )}
+            <div className="hero-stat-item">
+              <p className="stat-label">Budget</p>
+              <p className="stat-value">₹{monthlyBudget.toLocaleString('en-IN')}</p>
+            </div>
+            <div className="hero-stat-item">
+              <p className="stat-label">Expenses</p>
+              <p className="stat-value">₹{totalExpenses.toLocaleString('en-IN')}</p>
+            </div>
+            <div className="hero-stat-item">
+              <p className="stat-label">Savings</p>
+              <p className="stat-value">₹{savings.toLocaleString('en-IN')}</p>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div className="spending-chart">
-          <h2>Spending by Category</h2>
-          {categoryData.length > 0 ? (
-            <div className="chart-wrapper" style={{ height: '350px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={renderCustomizedLabel}
-                    labelLine={true}
-                  >
-                    {categoryData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: any) => `₹${value}`} />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
+      {/* 3. Quick Actions */}
+      <section className="quick-actions">
+        <button className="quick-action-btn primary" onClick={() => onOpenAddModal && onOpenAddModal()}>
+          <div className="qa-icon"><Plus size={20} /></div>
+          <span>Add Expense</span>
+        </button>
+        <button className="quick-action-btn secondary" onClick={() => setIsIncomeModalOpen(true)}>
+          <div className="qa-icon"><ArrowDownRight size={20} /></div>
+          <span>Add Income</span>
+        </button>
+        <button className="quick-action-btn tertiary" onClick={() => setIsBudgetModalOpen(true)}>
+          <div className="qa-icon"><Target size={20} /></div>
+          <span>Update Budget</span>
+        </button>
+      </section>
+
+      {/* 4. Financial Summary Cards */}
+      <section className="summary-section">
+        <div className="summary-grid">
+          <div className="premium-card" onClick={() => setIsBudgetModalOpen(true)}>
+            <div className="card-header">
+              <div className="icon-wrapper primary"><Target size={24} /></div>
+              <span className="trend-indicator"><ArrowUpRight size={14} /> Set limits</span>
             </div>
-          ) : (
-            <div className="empty-state-small" style={{ height: '350px' }}>
-              <PieChartIcon size={40} color="var(--color-text-muted)" />
-              <p>Chart will appear once you add expenses.</p>
+            <div className="card-body">
+              <h3 className="card-amount"><AnimatedNumber value={monthlyBudget} prefix="₹" /></h3>
+              <p className="card-label">Monthly Budget</p>
             </div>
-          )}
+          </div>
+
+          <div className="premium-card" onClick={() => setIsIncomeModalOpen(true)}>
+            <div className="card-header">
+              <div className="icon-wrapper accent"><Wallet size={24} /></div>
+              <span className="trend-indicator positive"><ArrowDownRight size={14} /> +Income</span>
+            </div>
+            <div className="card-body">
+              <h3 className="card-amount"><AnimatedNumber value={monthlyIncome} prefix="₹" /></h3>
+              <p className="card-label">Monthly Income</p>
+            </div>
+          </div>
+
+          <div className="premium-card">
+            <div className="card-header">
+              <div className="icon-wrapper secondary"><Receipt size={24} /></div>
+              <span className="trend-indicator negative"><ArrowUpRight size={14} /> {Math.round(budgetUsedPercent)}% used</span>
+            </div>
+            <div className="card-body">
+              <h3 className="card-amount"><AnimatedNumber value={totalExpenses} prefix="₹" /></h3>
+              <p className="card-label">Total Expenses</p>
+            </div>
+          </div>
+
+          <div className="premium-card">
+            <div className="card-header">
+              <div className="icon-wrapper success"><IndianRupee size={24} /></div>
+              <span className="trend-indicator positive"><ArrowDownRight size={14} /> {savingsRate}% saved</span>
+            </div>
+            <div className="card-body">
+              <h3 className="card-amount"><AnimatedNumber value={savings} prefix="₹" /></h3>
+              <p className="card-label">Total Savings</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <AmountModal 
-        isOpen={isBudgetModalOpen} 
-        onClose={() => setIsBudgetModalOpen(false)} 
-        title="Set Monthly Budget"
-        initialAmount={monthlyBudget}
-        onSave={updateMonthlyBudget}
-      />
+      {/* Placeholders for Analytics & Transactions that will be populated via routing or embedded later */}
+      <section className="analytics-preview">
+         <Analytics />
+      </section>
+      
+      <section className="transactions-preview">
+         <Transactions />
+      </section>
 
-      <AmountModal 
-        isOpen={isIncomeModalOpen} 
-        onClose={() => setIsIncomeModalOpen(false)} 
-        title="Set Monthly Income"
-        initialAmount={monthlyIncome}
-        onSave={updateMonthlyIncome}
-      />
+      {isBudgetModalOpen && (
+        <AmountModal
+          isOpen={true}
+          title="Set Monthly Budget"
+          initialAmount={monthlyBudget}
+          onSave={updateMonthlyBudget}
+          onClose={() => setIsBudgetModalOpen(false)}
+        />
+      )}
+
+      {isIncomeModalOpen && (
+        <AmountModal
+          isOpen={true}
+          title="Set Monthly Income"
+          initialAmount={monthlyIncome}
+          onSave={updateMonthlyIncome}
+          onClose={() => setIsIncomeModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

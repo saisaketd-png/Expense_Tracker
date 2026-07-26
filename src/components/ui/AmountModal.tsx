@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { Button } from './Button';
 import { Input } from './Input';
 import { useToast } from '../../context/ToastContext';
+import './AddExpenseModal.css';
 
 interface AmountModalProps {
   isOpen: boolean;
@@ -47,15 +48,15 @@ export const AmountModal: React.FC<AmountModalProps> = ({ isOpen, onClose, title
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content animate-fade-in-up" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-        <div className="modal-header">
+    <div className="premium-modal-overlay" onClick={onClose}>
+      <div className="premium-modal-content animate-slide-up" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', gap: 'var(--spacing-md)' }}>
+        <button className="premium-modal-close" onClick={onClose}>
+          <X size={20} />
+        </button>
+        <div className="premium-modal-header">
           <h2>{title}</h2>
-          <button className="btn-icon" onClick={onClose}>
-            <X size={24} color="var(--color-text-muted)" />
-          </button>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+        <form onSubmit={handleSubmit} className="premium-modal-form">
           <Input 
             label="Amount (₹)" 
             type="number" 
@@ -65,7 +66,9 @@ export const AmountModal: React.FC<AmountModalProps> = ({ isOpen, onClose, title
             error={error}
             autoFocus
           />
-          <Button type="submit" variant="primary">Save</Button>
+          <Button type="submit" variant="primary" style={{ marginTop: 'var(--spacing-sm)' }}>
+            Save
+          </Button>
         </form>
       </div>
     </div>

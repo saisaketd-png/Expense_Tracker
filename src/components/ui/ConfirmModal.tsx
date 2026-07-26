@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './Button';
 import { X, AlertTriangle } from 'lucide-react';
+import './AddExpenseModal.css';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -24,25 +25,27 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-danger)' }}>
-            <AlertTriangle size={24} />
-            <h2>{title}</h2>
+    <div className="premium-modal-overlay" onClick={onCancel}>
+      <div className="premium-modal-content animate-slide-up" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+        <button className="premium-modal-close" onClick={onCancel}>
+          <X size={20} />
+        </button>
+        <div className="premium-modal-header" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ color: 'var(--color-danger)', display: 'flex' }}>
+            <AlertTriangle size={28} />
           </div>
-          <button className="btn-icon" onClick={onCancel}>
-            <X size={24} color="var(--color-text-muted)" />
-          </button>
+          <h2>{title}</h2>
         </div>
         
-        <p style={{ color: 'var(--color-text-muted)' }}>{message}</p>
+        <p style={{ color: 'var(--color-text-secondary)', lineHeight: '1.6', fontSize: '1rem' }}>
+          {message}
+        </p>
         
-        <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-md)' }}>
-          <Button variant="secondary" onClick={onCancel} style={{ flex: 1 }}>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+          <Button variant="secondary" onClick={onCancel}>
             {cancelText}
           </Button>
-          <Button variant="primary" onClick={onConfirm} style={{ flex: 1, backgroundColor: 'var(--color-danger)' }}>
+          <Button variant="danger" onClick={onConfirm}>
             {confirmText}
           </Button>
         </div>

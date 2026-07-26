@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { Button } from './Button';
-import { Input } from './Input';
+import { X, Check } from 'lucide-react';
 import { useExpenses } from '../../context/ExpenseContext';
 import type { Transaction } from '../../context/ExpenseContext';
 import { useToast } from '../../context/ToastContext';
+import { getCategoryStyles } from '../../utils/categoryIcons';
+import type { Category } from '../../utils/categoryIcons';
+import './AddExpenseModal.css';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -12,135 +13,156 @@ interface AddExpenseModalProps {
   initialData?: Transaction | null;
 }
 
-const CATEGORIES = [
-  'Food',
-  'Transport',
-  'Shopping',
-  'Entertainment',
-  'Education',
-  'Bills',
-  'Healthcare',
-  'Other'
+const CATEGORIES: Category[] = [
+  'Food', 'Shopping', 'Transport', 'Bills', 
+  'Education', 'Entertainment', 'Healthcare', 'Other'
 ];
 
 export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClose, initialData }) => {
   const { addTransaction, editTransaction } = useExpenses();
   const { showToast } = useToast();
-  
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState('');
-  const [notes, setNotes] = useState('');
-  const [error, setError] = useState('');
 
-  // Reset or populate form when opened
+  const [title, setTitle] = useState('');
+  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState<Category>('Food');
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        setAmount(Math.abs(initialData.amount).toString());
-        setCategory(initialData.category);
-        setDate(initialData.date);
-        setNotes(initialData.title !== initialData.category ? initialData.title : '');
-      } else {
-        setAmount('');
-        setCategory('');
-        setDate(new Date().toISOString().split('T')[0]);
-        setNotes('');
-      }
-      setError('');
+    if (initialData && isOpen) {
+      setTitle(initialData.title);
+      setAmount(initialData.amount.toString());
+      setCategory(initialData.category as Category);
+      setDate(initialData.date);
+    } else if (isOpen) {
+      setTitle('');
+      setAmount('');
+      setCategory('Food');
+      setDate(new Date().toISOString().split('T')[0]);
     }
-  }, [isOpen, initialData]);
+  }, [initialData, isOpen]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (!amount || !category) {
-      setError('Amount and Category are required.');
-      return;
-    }
-
-    const amountNum = parseFloat(amount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      setError('Please enter a valid positive amount.');
-      return;
-    }
-
-    const txData = {
-      title: notes || category,
-      category,
-      amount: amountNum,
-      date: date || new Date().toISOString().split('T')[0],
-      type: 'expense' as const
-    };
-
-    if (initialData) {
-      editTransaction(initialData.id, txData);
-      showToast('Expense updated successfully!', 'success');
-    } else {
-      addTransaction(txData);
-      showToast('Expense added successfully!', 'success');
-    }
+    setIsSubmitting(true);
     
-    onClose();
+    setTimeout(() => {
+      const transactionData = {
+        title,
+        amount: parseFloat(amount),
+        category,
+        date,
+        type: 'expense' as const
+      };
+
+      if (initialData) {
+        editTransaction(initialData.id, transactionData);
+        showToast('Expense updated successfully', 'success');
+      } else {
+        addTransaction(transactionData);
+        showToast('Expense added successfully', 'success');
+      }
+      
+      setIsSubmitting(false);
+      onClose();
+    }, 400); // Simulate network request for button animation
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{initialData ? 'Edit Expense' : 'Add Expense'}</h2>
-          <button className="btn-icon" onClick={onClose}>
-            <X size={24} color="var(--color-text-muted)" />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
-          {error && <div className="text-danger text-sm">{error}</div>}
-          
-          <Input 
-            label="Amount (₹)" 
-            type="number" 
-            placeholder="0.00" 
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            autoFocus
-          />
+    <div className="premium-modal-overlay">
+      <div className="premium-modal-content animate-slide-up">
+        <button className="premium-modal-close" onClick={onClose}>
+          <X size={24} />
+        </button>
 
-          <div className="input-wrapper">
-            <label className="input-label">Category</label>
-            <select 
-              className="input-field" 
-              value={category} 
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="" disabled>Select a category</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+        <div className="premium-modal-header">
+          <h2>{initialData ? 'Edit Expense' : 'New Expense'}</h2>
+          <p>Track your spending with precision.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="premium-modal-form">
+          {/* Giant Amount Input */}
+          <div className="form-group amount-group">
+            <span className="currency-symbol">₹</span>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              required
+              min="1"
+              step="any"
+              className="giant-amount-input"
+            />
           </div>
 
-          <Input 
-            label="Date" 
-            type="date" 
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <div className="form-group">
+            <label className="floating-label">Merchant / Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Starbucks, Uber"
+              required
+              className="premium-input"
+            />
+          </div>
 
-          <Input 
-            label="Notes (Optional)" 
-            type="text" 
-            placeholder="e.g. Lunch with friends" 
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+          <div className="form-group">
+            <label className="floating-label">Category</label>
+            <div className="category-grid">
+              {CATEGORIES.map(cat => {
+                const styles = getCategoryStyles(cat);
+                const isSelected = category === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={`category-icon-btn ${isSelected ? 'selected' : ''}`}
+                    onClick={() => setCategory(cat)}
+                    style={{
+                      backgroundColor: isSelected ? styles.bg : 'transparent',
+                      borderColor: isSelected ? styles.color : 'var(--color-border)',
+                      color: isSelected ? styles.color : 'var(--color-text-muted)'
+                    }}
+                  >
+                    {styles.icon}
+                    <span>{cat}</span>
+                    {isSelected && (
+                      <div className="selected-check" style={{ backgroundColor: styles.color }}>
+                        <Check size={10} color="#fff" strokeWidth={4} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-          <Button type="submit" variant="primary" style={{ marginTop: 'var(--spacing-sm)' }}>
-            Save Expense
-          </Button>
+          <div className="form-group">
+            <label className="floating-label">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              className="premium-input"
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            className={`premium-submit-btn ${isSubmitting ? 'submitting' : ''}`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className="spinner"></span>
+            ) : (
+              initialData ? 'Save Changes' : 'Add Expense'
+            )}
+          </button>
         </form>
       </div>
     </div>
